@@ -4,12 +4,13 @@ import { SafeEventEmitterProvider } from "@web3auth/base";
 import { TezosToolkit } from "@taquito/taquito";
 import { hex2buf } from "@taquito/utils";
 import { InMemorySigner } from "@taquito/signer";
+import { Network } from "../constants/web3";
 
 export class TezosRpc {
     private provider: SafeEventEmitterProvider;
-    private tezos: TezosToolkit;
+    private tezos: Network;
 
-    constructor(provider: SafeEventEmitterProvider, tezos: TezosToolkit) {
+    constructor(provider: SafeEventEmitterProvider, tezos: Network) {
         this.provider = provider;
         this.tezos = tezos;
     }
@@ -29,7 +30,7 @@ export class TezosRpc {
     setProvider = async () => {
         const keyPair = await this.getTezosKeyPair();
         // use TacoInfra's RemoteSigner for better security on mainnet..
-        this.tezos.setSignerProvider(await InMemorySigner.fromSecretKey(keyPair?.sk as string));
+        new TezosToolkit(this.tezos).setSignerProvider(await InMemorySigner.fromSecretKey(keyPair?.sk as string));
     };
 
     getAccounts = async () => {
@@ -46,7 +47,7 @@ export class TezosRpc {
         try {
             const keyPair = await this.getTezosKeyPair();
             // keyPair.pkh is the account address.
-            const balance = await this.tezos.tz.getBalance(keyPair?.pkh as string);
+            const balance = await new TezosToolkit(this.tezos).tz.getBalance(keyPair?.pkh as string);
         
             return balance;
         } catch (error) {
@@ -81,7 +82,7 @@ export class TezosRpc {
             // 1. Use this link: https://tezostaquito.io/docs/making_transfers#transfer-from-an-implicit-tz1-address-to-a-tz1-address
             // 2. Modify the address and use the pkh key extracted from web3auth seed in the live code editor and click run code.
             // 3. Check balance in the account and have some fun.
-            const op = await this.tezos.wallet
+            const op = await new TezosToolkit(this.tezos).wallet
                 .transfer({
                     to: address,
                     amount: 0.00005,
